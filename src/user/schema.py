@@ -9,6 +9,7 @@ class UserSchema(BaseModel):
     username:str
     first_name:str
     last_name:str
+    
 
 class UserCreateSchema(BaseModel):
     role: UserRole
@@ -19,6 +20,5 @@ class UserCreateSchema(BaseModel):
     password:str
 
 class UserLoginSchema(BaseModel):
-
     email:str
     password:str

@@ -5,7 +5,6 @@ import jwt
 import uuid
 from datetime import datetime,timedelta
 
-from passlib.context import CryptContext
 
 ACCESS_TOKEN_EXPIRY = timedelta(
     seconds=3600)
@@ -13,7 +12,11 @@ ACCESS_TOKEN_EXPIRY = timedelta(
 
 def create_access_token(user:UserSchema, refresh=False, expiry: timedelta = None ):
     payload = {}
-    payload["user"]=user.model_dump()
+    payload["user"]= {
+        "email": user.email,
+        "role": user.role,
+        "uid": str(user.uid) 
+    }
     payload['exp'] = datetime.now() + (expiry if expiry is not None else ACCESS_TOKEN_EXPIRY)
     payload["jti"] = str(uuid.uuid4())
     payload['refresh'] = refresh
