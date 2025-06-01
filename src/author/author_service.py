@@ -4,16 +4,16 @@ from sqlmodel import select,desc
 from src.db.models import AuthorModel
 
 class AuthorService:
+    @staticmethod
     async def get_authors(
-        self,
         session: AsyncSession,   
     ):
         statement = select(AuthorModel).order_by(desc(AuthorModel.updated_at))
         authors = await session.exec(statement)
         return authors.all()
     
+    @staticmethod
     async def create_author(
-        self,
         session: AsyncSession,
         author: CreateAuthorSchema
     ):
@@ -25,21 +25,22 @@ class AuthorService:
         await session.refresh(new_author)
         return new_author
         
+    @staticmethod
     async def get_author(
-        self,
         session:AsyncSession,
         author_id:str   
     ):
         statement = select(AuthorModel).filter(AuthorModel.uid == author_id)
         authors = await session.exec(statement)
         return authors.first()
+    
+    @staticmethod
     async def update_author(
-        self,
         session: AsyncSession,
         author: UpdateAuthorSchema,
         id:str
     ):
-        author_to_update = await self.get_author(session,id)
+        author_to_update = await AuthorService.get_author(session,id)
         
         if(author_to_update is None):
             return None
@@ -54,12 +55,13 @@ class AuthorService:
             await session.refresh(author_to_update)
             return author_to_update
     
+    @staticmethod
     async def delete_author(
-        self,
+
         session:AsyncSession,
         id:str
     ):
-        author = await self.get_author(session,id)
+        author = await AuthorService.get_author(session,id)
         if author is not None:
             await session.delete(author)
             await session.commit()

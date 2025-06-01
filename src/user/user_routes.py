@@ -18,16 +18,16 @@ from src.utils.token_bearer import get_user,AccessToken
 user_router = APIRouter()
 
 
-user_service = UserService()
+
     
 @user_router.post("/create_account", response_model=SuccessResponse[UserModel],status_code=status.HTTP_201_CREATED)
 async def create_account(
             user_create_schema:UserCreateSchema,
             session: AsyncSession = Depends(get_session)):
-        if await user_service.does_user_exist(session, user_create_schema.email):
+        if await UserService.does_user_exist(session, user_create_schema.email):
             raise UserAlreadyExists()
         else:
-          user = await user_service.create_account(session,user_create_schema,)
+          user = await UserService.create_account(session,user_create_schema,)
           return SuccessResponse(
               message="Account created",
               data=user
@@ -38,7 +38,7 @@ async def create_account(
 async def login(
         login_details: UserLoginSchema, 
         session: AsyncSession = Depends(get_session)):
-        user = await user_service.get_user(session=session, email=login_details.email)
+        user = await UserService.get_user(session=session, email=login_details.email)
         if user is not None:
             is_password_valid = verify_password(login_details.password, user.password)
             if is_password_valid:

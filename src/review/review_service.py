@@ -1,6 +1,6 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.book.book_service import BookService
-from src.review.review_schema import CreateReviewSchema
+from src.review.review_schema import CreateReviewSchema, GetReviewSchema
 from src.user.user_service import UserService
 
 from src.db.models import ReviewModel
@@ -8,8 +8,8 @@ from sqlmodel import select
 from typing import List
 from src.utils.response.error import BookNotFound, UserNotFound
 
-book_service = BookService()
-user_service = UserService()
+
+
 
 class ReviewService:
     
@@ -17,7 +17,7 @@ class ReviewService:
     async def get_book_reviews(
         session:AsyncSession,
         book_uid:str
-    )->List[ReviewModel]:
+    )->List[GetReviewSchema]:
  
         statement = select(ReviewModel).where(ReviewModel.book_uid == book_uid)
         reviews = await session.exec(statement)
@@ -32,12 +32,12 @@ class ReviewService:
         email:str
     )->ReviewModel | None:
   
-        book = await book_service.get_book(session,book_uid)
+        book = await BookService.get_book(session,book_uid)
         
         if book is None:
             raise BookNotFound()
         
-        user = await user_service.get_user(session,email)
+        user = await UserService.get_user(session,email)
         
         if user is None:
             raise UserNotFound()
@@ -50,7 +50,7 @@ class ReviewService:
         
         session.add(updated_review_with_user_book)
         await session.commit()
-        await session.refresh()
+        await session.refresh(updated_review_with_user_book)
         return updated_review_with_user_book
         
         

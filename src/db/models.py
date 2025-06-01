@@ -61,8 +61,13 @@ class UserModel(SQLModel,table=True):
         )
     )
     reviews: List["ReviewModel"]= Relationship(
-        back_populates="book",
+        back_populates="user",
         sa_relationship_kwargs={'lazy':"selectin"}
+    )
+    loans: List["LoanBookModel"] = Relationship(
+        back_populates="user",
+        sa_relationship_kwargs={'lazy':"selectin"}
+
     )
 
 class AuthorModel(SQLModel, table = True):
@@ -129,10 +134,7 @@ class GenreModel(SQLModel, table=True):
           sa_relationship_kwargs={'lazy':"selectin"},
           back_populates="genres"
     )
-    borrows: List["BorrowBookModel"] = Relationship(
-        back_populates="book",
-        sa_relationship_kwargs={'lazy':"selectin"},
-    )
+
     
 class BookModel(SQLModel, table=True):
     __tablename__ = "book"
@@ -162,7 +164,9 @@ class BookModel(SQLModel, table=True):
         )
     )
     total_copies: int
-    borrowed_copies: int
+    loaned_copies: int = Field(
+        default=0
+    )
     authors: List["AuthorModel"] = Relationship(
         link_model=AuthorBookLink,
         back_populates="books",
@@ -177,7 +181,7 @@ class BookModel(SQLModel, table=True):
         back_populates="book",
         sa_relationship_kwargs={'lazy':"selectin"}
     )
-    borrows: List["BorrowBookModel"] = Relationship(
+    loans: List["LoanBookModel"] = Relationship(
         back_populates="book",
          sa_relationship_kwargs={'lazy':"selectin"}
     )
@@ -203,23 +207,17 @@ class ReviewModel(SQLModel, table = True):
         )
     )
     user_uid: uuid.UUID = Field(
-        sa_column=Column(
-            pg.UUID,
-            nullable=False,
-            foreign_key="user.uid"      
-        )
+        foreign_key="user.uid",
+        default=None,
+
     )
     user: Optional["UserModel"] = Relationship(
         back_populates="reviews",
         sa_relationship_kwargs={"lazy": "selectin"}
     )
     book_uid: uuid.UUID = Field(
-        sa_column=Column(
-            pg.UUID,
-            nullable=False,
-            foreign_key="book.uid"      
-            
-        )
+        default=None,
+     foreign_key="book.uid",
     )
     book: Optional["BookModel"] = Relationship(
         back_populates="reviews",
@@ -227,8 +225,8 @@ class ReviewModel(SQLModel, table = True):
     )
     
 
-class BorrowBookModel(SQLModel, table = True):
-    __tablename__ = "borrow"
+class LoanBookModel(SQLModel, table = True):
+    __tablename__ = "loan"
     uid: uuid.UUID = Field(
         sa_column=Column(
             pg.UUID,
@@ -257,16 +255,16 @@ class BorrowBookModel(SQLModel, table = True):
         foreign_key="book.uid"
     )
     book: Optional["BookModel"] = Relationship(
-        back_populates="reviews",
+        back_populates="loans",
          sa_relationship_kwargs={"lazy": "selectin"}
     )
     user_uid:uuid.UUID = Field(
         pg.UUID,
         nullable=False,
-        foreign_key="book.uid"
+        foreign_key="user.uid"
     )
     user: Optional["UserModel"] = Relationship(
-        back_populates="reviews",
+        back_populates="loans",
         sa_relationship_kwargs={"lazy": "selectin"}
     )
     loan_status: LoanStatus = Field(
@@ -293,7 +291,6 @@ class BorrowBookModel(SQLModel, table = True):
         default=None,
         sa_column=Column(
             pg.TIMESTAMP,
-            nullable=False,
         )
     )
     def __init__(self, **data):

@@ -4,8 +4,8 @@ from src.db.models import UserModel
 from src.user.schema import UserCreateSchema
 from src.utils.password_util import generate_password_hash
 class UserService:
+    @staticmethod
     async def get_user(
-        self,
         session: AsyncSession,
         email:str
     )-> UserModel | None:
@@ -14,8 +14,8 @@ class UserService:
         users = await session.exec(statement)
         return users.first()
     
+    @staticmethod
     async def create_account(
-        self,
         session:AsyncSession,
         user_create_schema: UserCreateSchema
     )->UserModel:
@@ -28,10 +28,10 @@ class UserService:
         await session.refresh(user)
         return user
     
+    @staticmethod
     async def does_user_exist(
-        self,
         session: AsyncSession,
         email:str
     )->bool:
-        user = await self.get_user(session,email)
+        user = await UserService.get_user(session,email)
         return True if user is not None else False

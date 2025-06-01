@@ -32,6 +32,8 @@ class GetBookSchema(BaseModel):
     published_year: Optional[str]
     description:str
     total_copies: int
+    loaned_copies:int
     genres: List[GenreModel]
     authors: List[AuthorModel]
     reviews: List[ReviewModel]
+    

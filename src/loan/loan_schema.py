@@ -5,7 +5,7 @@ from datetime import datetime
 from src.db.models import BookModel, UserModel, LoanStatus
 from typing import Optional
 
-class BorrowSchema(BaseModel):
+class LoanSchema(BaseModel):
     uid: uuid.UUID
     created_at: datetime
     updated_at: datetime 

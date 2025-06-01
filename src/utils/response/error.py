@@ -116,13 +116,13 @@ class BookNotOnLoan(AppException):
         message="Book is currently not on loan",
     )
        
-class BorrowBookNotAvailable(AppException):
+class LoanedBookNotAvailable(AppException):
     status_code = status.HTTP_404_NOT_FOUND
     detail = ErrorDetail(
         message="Book not available for borrowing",
     )
   
-class UserBorrowedBookAlready(AppException):
+class UserLoanedBookAlready(AppException):
     status_code = status.HTTP_403_FORBIDDEN
     detail = ErrorDetail(
         message="You have a book yet to be returned",

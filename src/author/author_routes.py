@@ -9,14 +9,14 @@ from src.db.models import AuthorModel
 from .author_schema import CreateAuthorSchema, UpdateAuthorSchema
 from typing import List
 author_router = APIRouter()
-author_service = AuthorService()
+
 
 @author_router.get("/",response_model= SuccessResponse[List[AuthorModel]])
 async def get_authors(
     session: AsyncSession = Depends(get_session),
-    token=Depends(AccessToken())
+    _=Depends(AccessToken())
 ):
-    authors = await author_service.get_authors(
+    authors = await AuthorService.get_authors(
         session
     )
     return SuccessResponse(
@@ -28,9 +28,9 @@ async def get_authors(
 async def get_author(
     author_id:str,
     session: AsyncSession = Depends(get_session),
-    token=Depends(AccessToken())
+    _=Depends(AccessToken())
 ):
-    author = await author_service.get_author(
+    author = await AuthorService.get_author(
         session,
         author_id
     )
@@ -49,7 +49,7 @@ async def delete_author(
     session: AsyncSession = Depends(get_session),
     _=Depends(AccessToken())
 ):
-    author = await author_service.delete_author(session,author_id)
+    author = await AuthorService.delete_author(session,author_id)
     
     if (author is not None):
         return SuccessResponse(
@@ -65,7 +65,7 @@ async def create_author(
     _=Depends(AccessToken())
 ):
     
-    created_author = await author_service.create_author(
+    created_author = await AuthorService.create_author(
         session,
         author
     )
@@ -80,9 +80,9 @@ async def update_author(
     author_id:str,
     author: UpdateAuthorSchema,
     session: AsyncSession = Depends(get_session),
-    token=Depends(AccessToken())
+    _=Depends(AccessToken())
 ):
-    updated_author = await author_service.update_author(
+    updated_author = await AuthorService.update_author(
         session,
         author,
         author_id    

@@ -23,14 +23,14 @@ class  BookService:
             result = await session.exec(
                 select(AuthorModel).where(AuthorModel.uid.in_(author_uuids))
             )
-            authors = result.scalars().all()
+            authors = result.all()
             await session.refresh(book)
             book.authors.clear()
             book.authors.extend(authors)
         else:
             book.authors = []
         if create_book.genres:
-            genres = await BookService.get_selected_authors(session, create_book.authors)
+            genres = await BookService.get_selected_genres(session, create_book.genres)
             book.genres = genres
         else: 
             book.genres = []
@@ -122,7 +122,7 @@ class  BookService:
         result = await session.exec(
                 select(AuthorModel).where(AuthorModel.uid.in_(author_uuids))
             )
-        authors = result.scalars().all()
+        authors = result.all()
         return authors
     
     
@@ -136,5 +136,5 @@ class  BookService:
         result = await session.exec(
                 select(GenreModel).where(GenreModel.uid.in_(author_uuids))
             )
-        authors = result.scalars().all()
+        authors = result.all()
         return authors

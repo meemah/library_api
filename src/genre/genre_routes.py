@@ -9,14 +9,14 @@ from typing import List
 from .genre_schema import CreateGenreSchema, UpdateGenreSchema
 
 genre_router = APIRouter()
-genre_service = GenreService()
+
 
 @genre_router.get("/",response_model=SuccessResponse[List[GenreModel]])
 async def get_genres(
     session=Depends(get_session),
     _ = Depends(AccessToken())    
 ):
-    genres = await genre_service.get_genres(
+    genres = await GenreService.get_genres(
         session
     )
     
@@ -31,7 +31,7 @@ async def get_genres(
     session=Depends(get_session),
     _ = Depends(AccessToken())    
 ):
-    genre = await genre_service.get_genre(
+    genre = await GenreService.get_genre(
         session,genre_id
     )
     if genre is  None:
@@ -48,7 +48,7 @@ async def get_genres(
     session=Depends(get_session),
     _ = Depends(AccessToken())    
 ):
-    genre = await genre_service.delete_genre(
+    genre = await GenreService.delete_genre(
         session,genre_id
     )
     if genre is None:
@@ -65,10 +65,9 @@ async def get_genres(
     genre_id:str,
    update_genre: UpdateGenreSchema,
     session=Depends(get_session),
-   
     _ = Depends(AccessToken())    
 ):
-    genre = await genre_service.update_genre(
+    genre = await GenreService.update_genre(
         session,genre_id,update_genre
     )
     if genre is None:
@@ -83,10 +82,9 @@ async def get_genres(
 async def create_genre(
    create_genre: CreateGenreSchema,
     session=Depends(get_session),
-   
     _ = Depends(AccessToken())    
 ):
-    genre = await genre_service.create_genre(
+    genre = await GenreService.create_genre(
         session,create_genre
     )
     if genre is None:

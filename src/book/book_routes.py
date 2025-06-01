@@ -12,7 +12,7 @@ from .book_schema import CreateBookSchema, GetBookSchema, UpdateBookSchema
 
 
 book_router = APIRouter()
-book_service = BookService()
+
 
 @book_router.post("/create", response_model=SuccessResponse[BookModel])
 async def create_book(
@@ -20,7 +20,7 @@ async def create_book(
     session = Depends(get_session),
     _ = Depends(AccessToken())
 ):
-    book = await  book_service.create_book(session,create_book)
+    book = await  BookService.create_book(session,create_book)
     return SuccessResponse(
         message = "Book created successfully",
         data = book
@@ -31,7 +31,7 @@ async def get_books(
        session = Depends(get_session),
     _ = Depends(AccessToken()) 
 ):
-    books = await book_service.get_books(session)
+    books = await BookService.get_books(session)
     
     return SuccessResponse(
         message= "Books Fetched",
@@ -44,7 +44,7 @@ async def get_book(
     session = Depends(get_session),
         _ = Depends(AccessToken()) 
 ):
-    book = await book_service.get_book( session, book_uid )
+    book = await BookService.get_book( session, book_uid )
     if book is None:
         raise BookNotFound()
     else:
@@ -60,7 +60,7 @@ async def delete_book(
         _ = Depends(AccessToken()) 
     
 ):
-    is_deleted = True if await book_service.delete_book(session,book_uid) is not None else False
+    is_deleted = True if await BookService.delete_book(session,book_uid) is not None else False
     if is_deleted:
         return SuccessResponse(
             message = "Deleted Successfully",
@@ -76,7 +76,7 @@ async def update_book(
     session = Depends(get_session),
         _ = Depends(AccessToken())  
 ):
-    book = await book_service.update_book(session, book_uid,update_book_schema)
+    book = await BookService.update_book(session, book_uid,update_book_schema)
     if book is not None:
         return SuccessResponse(
             message = "Updated Successfully",

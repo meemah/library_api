@@ -12,17 +12,15 @@ from fastapi import APIRouter, Depends
 
 
 review_router = APIRouter()
-review_service = ReviewService()
 
 
-
-@review_router.get("\{book_uid}", response_model=List[ReviewModel])
+@review_router.get("/{book_uid}", response_model=SuccessResponse[List[ReviewModel]])
 async def get_book_reviews(
     book_uid: str,
-    token = Depends(AccessToken()),
+    _ = Depends(AccessToken()),
     session = Depends(get_session)
 ):
-    reviews = await review_service.get_book_reviews(
+    reviews = await ReviewService.get_book_reviews(
         session, book_uid
     )
     return SuccessResponse(
@@ -30,7 +28,7 @@ async def get_book_reviews(
         data = reviews
     )
     
-@review_router.post("\{book_uid}", response_model=SuccessResponse[ReviewModel])
+@review_router.post("/{book_uid}", response_model=SuccessResponse[ReviewModel])
 async def create_book_review(
     book_uid: str,
     create_review: CreateReviewSchema,
@@ -38,8 +36,7 @@ async def create_book_review(
     session = Depends(get_session),
 
 ):
-    
-    review = await review_service.add_book_review(
+    review = await ReviewService.add_book_review(
         session,
         book_uid,
         create_review,

@@ -3,16 +3,17 @@ from sqlmodel import select,desc
 from src.db.models import GenreModel
 from .genre_schema import CreateGenreSchema,UpdateGenreSchema
 class GenreService:
+    
+    @staticmethod
     async def get_genres(
-        self,
         session:AsyncSession
     ):
         statement = select(GenreModel).order_by(desc(GenreModel.updated_at))
         genres = await  session.exec(statement)
         return genres.all()
     
+    @staticmethod
     async def get_genre(
-        self,
         session:AsyncSession,
         genre_id:str
     ):
@@ -20,12 +21,12 @@ class GenreService:
         genres = await session.exec(statement)
         return genres.first()
     
+    @staticmethod
     async def delete_genre(
-        self,
         session:AsyncSession,
         genre_id:str
     ):
-        genre = await self.get_genre(session,genre_id)
+        genre = await GenreService.get_genre(session,genre_id)
         await session.delete(genre)
         await session.commit()
         if genre is not None:
@@ -33,8 +34,8 @@ class GenreService:
         else: 
             return None
     
+    @staticmethod
     async def create_genre(
-        self,
         session:AsyncSession,
         create_genre: CreateGenreSchema
     ):
@@ -46,13 +47,13 @@ class GenreService:
         await session.refresh(genre)
         return genre
     
+    @staticmethod
     async def update_genre(
-        self,
         session:AsyncSession,
         genre_id:str,
         update_genre: UpdateGenreSchema
     ):
-        genre = await self.get_genre(session, genre_id)
+        genre = await GenreService.get_genre(session, genre_id)
         if genre is None:
             return None
         else:

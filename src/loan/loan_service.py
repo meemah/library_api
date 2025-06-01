@@ -1,15 +1,15 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select,desc
-from src.db.models import BorrowBookModel, LoanStatus
+from src.db.models import LoanBookModel, LoanStatus
 from src.book.book_service import BookService
 from src.user.user_service import UserService
-from src.utils.response.error import BookNotFound, UserNotFound, BorrowBookNotAvailable, UserBorrowedBookAlready, LoanNotFound, BookNotOnLoan
+from src.utils.response.error import BookNotFound, UserNotFound, LoanedBookNotAvailable, UserLoanedBookAlready, LoanNotFound, BookNotOnLoan
 from datetime import datetime
 
 book_service = BookService()
 user_service = UserService()
 
-class BorrowService:
+class LoanService:
     @staticmethod
     async def borrow_book(
         session: AsyncSession,
@@ -24,18 +24,18 @@ class BorrowService:
             return UserNotFound()
         total_copies: int = book.total_copies
         
-        if total_copies <=0 or total_copies == book.borrowed_copies:
-            raise BorrowBookNotAvailable()
-        has_exisitng_loan = await BorrowService.get_user_borrowed_history (
+        if total_copies <=0 or total_copies == book.loaned_copies:
+            raise LoanedBookNotAvailable()
+        has_exisitng_loan = await LoanService.get_user_loan_history (
             session,
             LoanStatus.active,
             user_uid=user.uid
         )
         if has_exisitng_loan:
-            raise UserBorrowedBookAlready()
-        book.borrowed_copies += 1
+            raise UserLoanedBookAlready()
+        book.loaned_copies += 1
         
-        borrowed = BorrowBookModel(
+        borrowed = LoanBookModel(
             book_uid =book.uid,
             user_uid = user.uid,
             user = user,
@@ -54,7 +54,7 @@ class BorrowService:
         loan_uid:str,
     ):
         
-        loan =  await BorrowService.get_borrow_details(session, loan_uid)
+        loan =  await LoanService.get_loan_details(session, loan_uid)
         if loan is None:
             raise LoanNotFound()
         else: 
@@ -68,7 +68,7 @@ class BorrowService:
                 if book is None:
                     return BookNotFound()
                 else: 
-                    book.borrowed_copies -=1
+                    book.loaned_copies -=1
                     await session.commit()
                     await session.refresh(loan)
                     return loan
@@ -76,34 +76,34 @@ class BorrowService:
         
         
     @staticmethod 
-    async def  get_borrow_details(
+    async def  get_loan_details(
         session:AsyncSession, 
         loan_uid:str,
     ): 
-        statement = select(BorrowBookModel).where(BorrowBookModel.uid == loan_uid)
+        statement = select(LoanBookModel).where(LoanBookModel.uid == loan_uid)
         result =await session.exec(statement)
         return result.first()
         
     
     @staticmethod
-    async def get_all_borrowed_history(
+    async def get_all_loan_history(
         session: AsyncSession,
         loan_status: LoanStatus
     ):
         
-        statement =  select(BorrowBookModel).where(BorrowBookModel.loan_status ==  loan_status)
+        statement =  select(LoanBookModel).where(LoanBookModel.loan_status ==  loan_status)
         borrowed_list = await session.exec(statement)
         return borrowed_list.all()
     
     
     @staticmethod
-    async def get_user_borrowed_history(
+    async def get_user_loan_history(
         session: AsyncSession,
         loan_status: LoanStatus,
         user_uid = str,      
         
     ): 
-        statement = select(BorrowBookModel).where(BorrowBookModel.loan_status == loan_status).where(BorrowBookModel.user_uid == user_uid).order_by(desc(BorrowBookModel.updated_at))
+        statement = select(LoanBookModel).where(LoanBookModel.loan_status == loan_status).where(LoanBookModel.user_uid == user_uid).order_by(desc(LoanBookModel.updated_at))
         borrowed_list = await session.exec(statement)
         return borrowed_list.all()
         
@@ -113,7 +113,7 @@ class BorrowService:
         session:AsyncSession,
         book_uid: str
     ): 
-        statement = select(BorrowBookModel).where(BorrowBookModel.book_uid == book_uid).order_by(desc(BorrowBookModel.updated_at))
+        statement = select(LoanBookModel).where(LoanBookModel.book_uid == book_uid).order_by(desc(LoanBookModel.updated_at))
         result = await session.exec(statement)
         return result.all()
     
