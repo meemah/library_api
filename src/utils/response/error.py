@@ -97,6 +97,37 @@ class GenreNotFound(AppException):
     detail = ErrorDetail(
         message="Genre not found",
     )
+class BookNotFound(AppException):
+    status_code = status.HTTP_404_NOT_FOUND
+    detail = ErrorDetail(
+        message="Book not found",
+    )
+    
+  
+class LoanNotFound(AppException):
+    status_code = status.HTTP_404_NOT_FOUND
+    detail = ErrorDetail(
+        message="Loan Record not found",
+    )
+      
+class BookNotOnLoan(AppException):
+    status_code = status.HTTP_403_FORBIDDEN,
+    detail = ErrorDetail(
+        message="Book is currently not on loan",
+    )
+       
+class BorrowBookNotAvailable(AppException):
+    status_code = status.HTTP_404_NOT_FOUND
+    detail = ErrorDetail(
+        message="Book not available for borrowing",
+    )
+  
+class UserBorrowedBookAlready(AppException):
+    status_code = status.HTTP_403_FORBIDDEN
+    detail = ErrorDetail(
+        message="You have a book yet to be returned",
+    )  
+    
 def register_all_errors(app: FastAPI):
     @app.exception_handler(AppException)
     async def app_exception_handler(request: Request, exc: AppException):

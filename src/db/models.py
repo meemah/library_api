@@ -1,14 +1,27 @@
 from pydantic import BaseModel
-from sqlmodel import SQLModel, Field, Column
+from sqlmodel import SQLModel, Field, Column, Relationship
 import sqlalchemy.dialects.postgresql as pg
 import uuid
-from datetime import datetime
+from datetime import datetime,timedelta
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
+
 class UserRole(str, Enum):
     admin = "admin"
     user = "user"
 
+class LoanStatus(str, Enum):
+    active = "active"
+    returned = "returned"
+    overdue = "overdue"
+    lost = "lost"
+class AuthorBookLink(SQLModel,table = True):
+    author_uid: uuid.UUID = Field(foreign_key="author.uid", primary_key=True)
+    book_uid: uuid.UUID = Field(foreign_key="book.uid", primary_key=True)
+
+class GenreBookLink(SQLModel, table=True):
+    genre_uid: uuid.UUID = Field(foreign_key="genre.uid",primary_key=True)
+    book_uid: uuid.UUID = Field(foreign_key="book.uid", primary_key=True)
 class UserModel(SQLModel,table=True):
     __tablename__ = "user"
     uid:uuid.UUID = Field(
@@ -47,6 +60,10 @@ class UserModel(SQLModel,table=True):
             default=datetime.now
         )
     )
+    reviews: List["ReviewModel"]= Relationship(
+        back_populates="book",
+        sa_relationship_kwargs={'lazy':"selectin"}
+    )
 
 class AuthorModel(SQLModel, table = True):
     __tablename__ = "author"
@@ -74,10 +91,15 @@ class AuthorModel(SQLModel, table = True):
         )
     )
     bio: Optional[str]
+    books: List["BookModel"] = Relationship(
+        link_model=AuthorBookLink,
+        back_populates="authors",
+         sa_relationship_kwargs={'lazy':"selectin"}
+    )
     
 
 class GenreModel(SQLModel, table=True):
-    __tablename__ ="Genres"
+    __tablename__ ="genre"
     uid: uuid.UUID = Field(
         sa_column=Column(
             pg.UUID,
@@ -102,6 +124,179 @@ class GenreModel(SQLModel, table=True):
     )
     name:str
     description: Optional[str]
+    books: List["BookModel"] = Relationship(
+          link_model=GenreBookLink,
+          sa_relationship_kwargs={'lazy':"selectin"},
+          back_populates="genres"
+    )
+    borrows: List["BorrowBookModel"] = Relationship(
+        back_populates="book",
+        sa_relationship_kwargs={'lazy':"selectin"},
+    )
+    
+class BookModel(SQLModel, table=True):
+    __tablename__ = "book"
+    uid: uuid.UUID = Field(
+        sa_column=Column(
+            pg.UUID,
+            nullable=False,
+            primary_key=True,
+            default=uuid.uuid4
+        )
+    )
+    name:str
+    published_year: Optional[str]
+    description:str
+    created_at: datetime = Field(
+        sa_column=Column(
+        pg.TIMESTAMP,
+        nullable=False,
+        default= datetime.now
+        )
+    )
+    updated_at: datetime =Field(
+        sa_column=Column(
+        pg.TIMESTAMP,
+        nullable=False,
+        default= datetime.now
+        )
+    )
+    total_copies: int
+    borrowed_copies: int
+    authors: List["AuthorModel"] = Relationship(
+        link_model=AuthorBookLink,
+        back_populates="books",
+        sa_relationship_kwargs={'lazy':"selectin"}
+    )
+    genres: List["GenreModel"] = Relationship(
+        link_model=GenreBookLink,
+        back_populates="books",
+        sa_relationship_kwargs={'lazy':"selectin"}
+    )
+    reviews: List["ReviewModel"]= Relationship(
+        back_populates="book",
+        sa_relationship_kwargs={'lazy':"selectin"}
+    )
+    borrows: List["BorrowBookModel"] = Relationship(
+        back_populates="book",
+         sa_relationship_kwargs={'lazy':"selectin"}
+    )
+    
+    
+class ReviewModel(SQLModel, table = True):
+    __tablename__ = "review"
+    uid: uuid.UUID = Field(
+        sa_column=Column(
+            pg.UUID,
+            nullable=False,
+            primary_key=True,
+            default=uuid.uuid4
+        )
+    )
+    rating: int
+    review: str
+    created_at: datetime = Field(
+        sa_column=Column(
+        pg.TIMESTAMP,
+        nullable=False,
+        default= datetime.now
+        )
+    )
+    user_uid: uuid.UUID = Field(
+        sa_column=Column(
+            pg.UUID,
+            nullable=False,
+            foreign_key="user.uid"      
+        )
+    )
+    user: Optional["UserModel"] = Relationship(
+        back_populates="reviews",
+        sa_relationship_kwargs={"lazy": "selectin"}
+    )
+    book_uid: uuid.UUID = Field(
+        sa_column=Column(
+            pg.UUID,
+            nullable=False,
+            foreign_key="book.uid"      
+            
+        )
+    )
+    book: Optional["BookModel"] = Relationship(
+        back_populates="reviews",
+         sa_relationship_kwargs={"lazy": "selectin"}
+    )
     
 
+class BorrowBookModel(SQLModel, table = True):
+    __tablename__ = "borrow"
+    uid: uuid.UUID = Field(
+        sa_column=Column(
+            pg.UUID,
+            nullable=False,
+            primary_key=True,
+            default=uuid.uuid4
+        )
+    )
+    created_at: datetime = Field(
+        sa_column=Column(
+        pg.TIMESTAMP,
+        nullable=False,
+        default= datetime.now
+        )
+    )
+    updated_at: datetime =Field(
+        sa_column=Column(
+        pg.TIMESTAMP,
+        nullable=False,
+        default= datetime.now
+        )
+    )
+    book_uid: uuid.UUID = Field(
+        pg.UUID,
+        nullable=False,
+        foreign_key="book.uid"
+    )
+    book: Optional["BookModel"] = Relationship(
+        back_populates="reviews",
+         sa_relationship_kwargs={"lazy": "selectin"}
+    )
+    user_uid:uuid.UUID = Field(
+        pg.UUID,
+        nullable=False,
+        foreign_key="book.uid"
+    )
+    user: Optional["UserModel"] = Relationship(
+        back_populates="reviews",
+        sa_relationship_kwargs={"lazy": "selectin"}
+    )
+    loan_status: LoanStatus = Field(
+        default= LoanStatus.active,
+        sa_column=Column(
+            pg.TEXT,
+            nullable=False
+        )
+    )
+    loan_date: datetime=Field(
+        sa_column=Column(
+            pg.TIMESTAMP,
+            nullable=False,
+            default=datetime.now
+        )
+    )
+    due_date: datetime=Field(
+        sa_column=Column(
+            pg.TIMESTAMP,
+            nullable=False,
+        )
+    )
+    return_date: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(
+            pg.TIMESTAMP,
+            nullable=False,
+        )
+    )
+    def __init__(self, **data):
+        data.setdefault("due_date", datetime.now() + timedelta(days=14))
+        super().__init__(**data)
     

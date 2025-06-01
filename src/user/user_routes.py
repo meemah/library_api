@@ -21,13 +21,13 @@ user_router = APIRouter()
 user_service = UserService()
     
 @user_router.post("/create_account", response_model=SuccessResponse[UserModel],status_code=status.HTTP_201_CREATED)
-async def create_account(self,
+async def create_account(
             user_create_schema:UserCreateSchema,
             session: AsyncSession = Depends(get_session)):
-        if await self.user_service.does_user_exist(session, user_create_schema.email):
+        if await user_service.does_user_exist(session, user_create_schema.email):
             raise UserAlreadyExists()
         else:
-          user = await self.user_service.create_account(session,user_create_schema,)
+          user = await user_service.create_account(session,user_create_schema,)
           return SuccessResponse(
               message="Account created",
               data=user
@@ -36,10 +36,9 @@ async def create_account(self,
             
 @user_router.post("/login",response_model=SuccessResponse)
 async def login(
-        self,
         login_details: UserLoginSchema, 
         session: AsyncSession = Depends(get_session)):
-        user = await self.user_service.get_user(session=session, email=login_details.email)
+        user = await user_service.get_user(session=session, email=login_details.email)
         if user is not None:
             is_password_valid = verify_password(login_details.password, user.password)
             if is_password_valid:
@@ -62,7 +61,7 @@ async def login(
     
 @user_router.get("/me")
 async def get_my_profile(
-        self,
+
         user_model: UserModel = Depends(get_user)
         
     ):
