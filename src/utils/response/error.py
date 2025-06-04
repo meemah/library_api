@@ -1,9 +1,10 @@
 
 from pydantic import BaseModel
-from fastapi import status,FastAPI,Request
+from fastapi import status,FastAPI,Request,S
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from typing import List
+from sqlalchemy.exc import SQLAlchemyError
 class ErrorDetail(BaseModel):
     message:str|List
     success: bool = False
@@ -156,3 +157,21 @@ def register_all_errors(app: FastAPI):
 
             ).model_dump()    
         )   
+        
+    @app.exception_handler(500)
+    async def internal_server_error(request: Request,exc: RequestValidationError ):
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=  ErrorDetail(
+            message="Opps!Try again or Contact Support"
+            ).model_dump() 
+      )
+        
+    @app.exception_handler(SQLAlchemyError)
+    async def database_error(request: Request,exc: RequestValidationError):
+           return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=  ErrorDetail(
+            message="Opps!Try again or Contact Support"
+            ).model_dump() 
+      )
