@@ -1,10 +1,12 @@
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import uuid
 from datetime import datetime
 class CreateReviewSchema(BaseModel):
-    review: str
-    rating: int
+    review: str 
+    rating: int = Field(
+        lt=5
+    )
    
 class GetReviewSchema(BaseModel):
     review: str

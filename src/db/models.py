@@ -197,7 +197,9 @@ class ReviewModel(SQLModel, table = True):
             default=uuid.uuid4
         )
     )
-    rating: int
+    rating: int = Field(
+        lt=5
+    )
     review: str
     created_at: datetime = Field(
         sa_column=Column(
