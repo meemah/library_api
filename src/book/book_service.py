@@ -1,9 +1,10 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select,desc
-from src.db.models import BookModel,AuthorModel, GenreModel
+from src.db.models import BookModel,AuthorModel, GenreModel,AuthorBookLink,GenreBookLink
 from src.book.book_schema import CreateBookSchema, UpdateBookSchema
 import uuid
-from typing import List
+from typing import List, Optional
+from sqlalchemy.orm import selectinload
 class  BookService:
     @staticmethod
     async def create_book(
@@ -41,9 +42,31 @@ class  BookService:
     
     @staticmethod
     async def get_books(
-        session:AsyncSession
+        session:AsyncSession,
+        author_uid: Optional[str],
+        genre_uid: Optional[str]
     ): 
-        statement = select(BookModel).order_by(BookModel.updated_at)
+        statement = select(BookModel)
+        filters = []
+        eager_options = []
+        if author_uid:
+            statement = statement.join(AuthorBookLink, AuthorBookLink.book_uid == BookModel.uid).join(AuthorModel, AuthorModel.uid == AuthorBookLink.author_uid)
+            filters.append(AuthorModel.uid == author_uid)
+            eager_options.append(selectinload(BookModel.authors))
+        
+
+        if genre_uid: 
+            statement =statement.join(GenreBookLink, GenreBookLink.book_uid == BookModel.uid).join(GenreModel, GenreModel.uid ==GenreBookLink.genre_uid)
+            filters.append(GenreModel.uid == genre_uid)
+            eager_options.append(selectinload(BookModel.genres))
+            
+        if eager_options:
+            statement = statement.options(*eager_options)
+        
+        if filters:
+            statement = statement.where(*filters)
+
+        statement = statement.order_by(BookModel.updated_at)
         books = await session.exec(statement)
         return books.all()
     
@@ -66,7 +89,7 @@ class  BookService:
         if book is None:
             return None
         else:
-           await session.delete(book)
+           await session. delete(book)
            await session.commit()
            return {}
     
@@ -80,16 +103,15 @@ class  BookService:
         try:
             book = await BookService.get_book(session, book_uid)
             if book is None:
-                print("Hellooo")
                 return None
             else:
                 update_book_dict = update_book_schema.model_dump(
-                    exclude_unset=True, exclude={"authors", "genres"}
+                    exclude_unset=True, exclude={"authors", "genres","reviews","loans"}
                 )
                 
                 for k,v in update_book_dict.items():
                     if v is not None:
-                        setattr(k,v, book)
+                        setattr(book,k,v, )
                 if update_book_schema.authors is not None:
                     selected_authors = await BookService.get_selected_authors(
                         session, update_book_schema.authors        
@@ -107,7 +129,7 @@ class  BookService:
                         
             
         except Exception as e:
-            print("Exception {e}")
+            print(str(e))
             # return None
         
         

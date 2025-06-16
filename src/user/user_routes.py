@@ -3,7 +3,7 @@ from .user_service import UserService
 
 
 from src.db.main import get_session
-from fastapi import Depends,status,APIRouter
+from fastapi import Depends, status,APIRouter
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.user.schema import  UserCreateSchema, UserLoginSchema
 from src.db.models import UserModel
@@ -12,7 +12,8 @@ from src.utils.response.error import UserAlreadyExists,InvalidCredentials, UserN
 from src.utils.response.success import SuccessResponse
 from src.utils.token_util import create_access_token
 from src.utils.redis import add_jti_to_blocklist
-
+from src.utils.otp_util import generate_otp
+from src.utils.redis import create_otp
 from datetime import timedelta
 from src.utils.token_bearer import get_user,AccessToken
 user_router = APIRouter()
@@ -44,12 +45,17 @@ async def login(
             if is_password_valid:
                 access_token = create_access_token(user=user)
                 refresh_token = create_access_token(user=user,refresh=True,expiry=timedelta(2))
+                otp =  generate_otp()
+                
+                saved =  await create_otp(email=user.email,otp=otp)
+                print(saved)
                 return  SuccessResponse(
                     message =  "Login Successful",
                     data={
                         "user":user.model_dump(),
                         "access_token": access_token,
-                        "refresh_token": refresh_token
+                        "refresh_token": refresh_token,
+                        "otp":otp
                       },
                     
                 )
@@ -61,7 +67,6 @@ async def login(
     
 @user_router.get("/me")
 async def get_my_profile(
-
         user_model: UserModel = Depends(get_user)
         
     ):
@@ -86,7 +91,19 @@ async def logout(
         else: 
             raise ContactSupport()
         
-            
+@user_router.post("/verify")
+async def verify_otp(
+     otp:str,
+     user_model: UserModel = Depends(get_user),
+     session: AsyncSession = Depends(get_session),
+ 
+):
+    user = await UserService.verify_user(
+        session,
+        email=user_model.email,
+        otp=otp
+    )
+    return user
         
 
 

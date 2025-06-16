@@ -1,6 +1,6 @@
 
 
-from fastapi import APIRouter,Depends
+from fastapi import APIRouter,Depends, Query
 from src.utils.response.success import SuccessResponse
 from src.utils.response.error import BookNotFound
 from src.db.main import get_session
@@ -29,9 +29,11 @@ async def create_book(
 @book_router.get("/", response_model=SuccessResponse[List[BookModel]])
 async def get_books(
        session = Depends(get_session),
+       author = Query(default=None),
+       genre = Query(default = None),
     _ = Depends(AccessToken()) 
 ):
-    books = await BookService.get_books(session)
+    books = await BookService.get_books(session,author_uid=author,genre_uid=genre)
     
     return SuccessResponse(
         message= "Books Fetched",

@@ -1,6 +1,6 @@
 
 from pydantic import BaseModel
-from fastapi import status,FastAPI,Request,S
+from fastapi import status,FastAPI,Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from typing import List
@@ -112,7 +112,7 @@ class LoanNotFound(AppException):
     )
       
 class BookNotOnLoan(AppException):
-    status_code = status.HTTP_403_FORBIDDEN,
+    status_code = status.HTTP_404_NOT_FOUND
     detail = ErrorDetail(
         message="Book is currently not on loan",
     )
@@ -122,6 +122,12 @@ class LoanedBookNotAvailable(AppException):
     detail = ErrorDetail(
         message="Book not available for borrowing",
     )
+    
+class UserOnQueue(AppException):
+    status_code = status.HTTP_403_FORBIDDEN
+    detail = ErrorDetail(
+        message="You are already on the queue",
+    )
   
 class UserLoanedBookAlready(AppException):
     status_code = status.HTTP_403_FORBIDDEN
@@ -129,6 +135,12 @@ class UserLoanedBookAlready(AppException):
         message="You have a book yet to be returned",
     )  
     
+
+class OtpInvalid(AppException):
+    status_code = status.HTTP_403_FORBIDDEN
+    detail = ErrorDetail(
+        message="The OTP is invalid",
+    )
 def register_all_errors(app: FastAPI):
     @app.exception_handler(AppException)
     async def app_exception_handler(request: Request, exc: AppException):

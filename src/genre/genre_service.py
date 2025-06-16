@@ -60,7 +60,7 @@ class GenreService:
             update_genre_dict = update_genre.model_dump()
             for k,v in update_genre_dict.items():
                 if v is not None:
-                    setattr(k,v,genre)
+                    setattr(genre,k,v,)
                     
             await session.commit()
             await session.refresh(genre)

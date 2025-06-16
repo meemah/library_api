@@ -1,15 +1,14 @@
 
 
-from fastapi import APIRouter,Depends
+from fastapi import APIRouter,Depends, Query
 from src.utils.response.success import SuccessResponse
 
 from src.db.main import get_session
 from src.utils.token_bearer import get_user
 
 from src.db.models import LoanBookModel, LoanStatus, UserModel
-from typing import List
+from typing import  Optional
 from .loan_service import LoanService
-
 
 loan_router = APIRouter()
 
@@ -17,7 +16,7 @@ loan_router = APIRouter()
 @loan_router.get("/user/loan_history")
 async def get_users_loan_history(
     session = Depends(get_session),
-    loan_status: LoanStatus = LoanStatus.active,
+    loan_status: Optional[LoanStatus]  = Query(None),
     user: UserModel = Depends(get_user),
     
 ):
@@ -33,7 +32,7 @@ async def get_users_loan_history(
 @loan_router.get("/history")
 async def get_users_loan_history(
     session = Depends(get_session),
-    loan_status: LoanStatus = LoanStatus.active,
+    loan_status: Optional[LoanStatus] = Query(None)
     
 ):
     results = await LoanService.get_all_loan_history(

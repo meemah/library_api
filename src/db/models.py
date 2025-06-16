@@ -69,6 +69,10 @@ class UserModel(SQLModel,table=True):
         sa_relationship_kwargs={'lazy':"selectin"}
 
     )
+    loan_queue: List["LoanQueueModel"] = Relationship(
+    back_populates="user",
+    sa_relationship_kwargs={"lazy": "selectin"}
+)
 
 class AuthorModel(SQLModel, table = True):
     __tablename__ = "author"
@@ -185,6 +189,11 @@ class BookModel(SQLModel, table=True):
         back_populates="book",
          sa_relationship_kwargs={'lazy':"selectin"}
     )
+    loan_queue: List["LoanQueueModel"] = Relationship(
+    back_populates="book",
+    sa_relationship_kwargs={"lazy": "selectin"}
+    )
+    
     
     
 class ReviewModel(SQLModel, table = True):
@@ -219,11 +228,11 @@ class ReviewModel(SQLModel, table = True):
     )
     book_uid: uuid.UUID = Field(
         default=None,
-     foreign_key="book.uid",
+        foreign_key="book.uid",
     )
     book: Optional["BookModel"] = Relationship(
         back_populates="reviews",
-         sa_relationship_kwargs={"lazy": "selectin"}
+        sa_relationship_kwargs={"lazy": "selectin"}
     )
     
 
@@ -299,3 +308,51 @@ class LoanBookModel(SQLModel, table = True):
         data.setdefault("due_date", datetime.now() + timedelta(days=14))
         super().__init__(**data)
     
+class LoanQueueStatus(str, Enum):
+    waiting = "waiting"
+    notified = "notified"
+    cancelled = "cancelled"
+    completed = "completed"
+class LoanQueueModel(SQLModel, table=True):
+    __tablename__ ="loan_queue"
+    uid: uuid.UUID = Field(
+        sa_column=Column(
+            pg.UUID,
+            nullable=False,
+            primary_key=True,
+            default=uuid.uuid4
+        )
+    )
+    user_uid: uuid.UUID = Field(
+              nullable=False,
+        foreign_key="user.uid",
+      
+    )
+    user:Optional["UserModel"] = Relationship(
+        back_populates="loan_queue",
+        sa_relationship_kwargs={"lazy": "selectin"}
+    )
+    book_uid: uuid.UUID = Field(
+              foreign_key="book.uid",
+                   nullable=False,
+
+    )
+    book : Optional["BookModel"]= Relationship(
+        back_populates="loan_queue",
+        sa_relationship_kwargs={"lazy": "selectin"}
+    )
+    joined_at: datetime = Field(
+        sa_column=Column(
+                    pg.TIMESTAMP,
+        nullable=False,
+        default=datetime.now
+        )
+
+    )
+    queue_status: LoanQueueStatus = Field(
+        default=LoanQueueStatus.waiting,
+        sa_column=Column(
+            pg.TEXT,
+            nullable=False
+        )
+    )
