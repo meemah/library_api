@@ -16,6 +16,8 @@ from src.utils.otp_util import generate_otp
 from src.utils.redis import create_otp
 from datetime import timedelta
 from src.utils.token_bearer import get_user,AccessToken
+from src.utils.celery_tasks import send_email
+
 user_router = APIRouter()
 
 
@@ -29,8 +31,16 @@ async def create_account(
             raise UserAlreadyExists()
         else:
           user = await UserService.create_account(session,user_create_schema,)
+          otp =  generate_otp()
+          await create_otp(email=user.email,otp=otp)
+          html = f"""
+                  <h1>Verify your Account</h1>
+                  <p>Please use this otp {otp}</p>
+                 """
+          send_email.delay(recipients=[user.email],subject="Welcome To Library App",body=html)
+          
           return SuccessResponse(
-              message="Account created",
+              message="Account created,Check your email for an OTP",
               data=user
           )
     
@@ -45,17 +55,13 @@ async def login(
             if is_password_valid:
                 access_token = create_access_token(user=user)
                 refresh_token = create_access_token(user=user,refresh=True,expiry=timedelta(2))
-                otp =  generate_otp()
                 
-                saved =  await create_otp(email=user.email,otp=otp)
-                print(saved)
-                return  SuccessResponse(
+                return SuccessResponse(
                     message =  "Login Successful",
                     data={
                         "user":user.model_dump(),
                         "access_token": access_token,
-                        "refresh_token": refresh_token,
-                        "otp":otp
+                        "refresh_token": refresh_token
                       },
                     
                 )
