@@ -1,11 +1,14 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlmodel import select,desc
+from sqlmodel import select
 from src.db.models import BookModel,AuthorModel, GenreModel,AuthorBookLink,GenreBookLink
 from src.book.book_schema import CreateBookSchema, UpdateBookSchema
 import uuid
 from typing import List, Optional
 from sqlalchemy.orm import selectinload
+import logging
+logger = logging.getLogger(__name__)
 class  BookService:
+
     @staticmethod
     async def create_book(
         session:AsyncSession,
@@ -18,16 +21,12 @@ class  BookService:
         )
         session.add(book)
         await session.flush()
-        if create_book.authors:
-            author_uuids = [uuid.UUID(a) if isinstance(a, str) else a for a in create_book.authors]
 
-            result = await session.exec(
-                select(AuthorModel).where(AuthorModel.uid.in_(author_uuids))
-            )
-            authors = result.all()
+        if create_book.authors:
+            authors = await BookService.get_selected_authors(session,create_book.authors)
+        
             await session.refresh(book)
-            book.authors.clear()
-            book.authors.extend(authors)
+            book.authors = authors 
         else:
             book.authors = []
         if create_book.genres:
@@ -39,6 +38,7 @@ class  BookService:
         await session.commit()
         await session.refresh(book)
         return book
+        
     
     @staticmethod
     async def get_books(
@@ -78,7 +78,20 @@ class  BookService:
         statement = select(BookModel).where(BookModel.uid == book_uid)
         books = await session.exec(statement)
         return books.first()
-    
+    @staticmethod
+    async def get_full_book(
+        session: AsyncSession,
+        book_uid:str
+    ):
+        statement = select(BookModel).where(BookModel.uid == book_uid).options(
+        selectinload(BookModel.authors),
+        selectinload(BookModel.genres),
+        selectinload(BookModel.reviews),
+        selectinload(BookModel.loans),
+        selectinload(BookModel.loan_queue)
+       )
+        books = await session.exec(statement)
+        return books.first()
     @staticmethod 
     async def delete_book(
         session:AsyncSession,
@@ -137,26 +150,29 @@ class  BookService:
     @staticmethod
     async def get_selected_authors(
         session:AsyncSession,
-        uuids: List[uuid.UUID]
+        uuids: List[str]
     )->List[GenreModel] :
+       
         author_uuids = [uuid.UUID(a) if isinstance(a, str) else a for a in uuids]
-
+        
         result = await session.exec(
                 select(AuthorModel).where(AuthorModel.uid.in_(author_uuids))
             )
-        authors = result.all()
-        return authors
+
+        return result.all()
     
     
     @staticmethod
     async def get_selected_genres(
         session:AsyncSession,
-        uuids: List[uuid.UUID]
+        uuids: List[str]
     )-> List[GenreModel]:
-        author_uuids = [uuid.UUID(a) if isinstance(a, str) else a for a in uuids]
+        
+        genre_uuids = [uuid.UUID(a) if isinstance(a, str) else a for a in uuids]
 
         result = await session.exec(
-                select(GenreModel).where(GenreModel.uid.in_(author_uuids))
+                select(GenreModel).where(GenreModel.uid.in_(genre_uuids))
             )
-        authors = result.all()
-        return authors
+     
+        return result.all()
+        

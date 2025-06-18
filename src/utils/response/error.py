@@ -17,7 +17,7 @@ class AppException(Exception):
     )
 
 class InvalidToken(AppException):
-    status_code=status.HTTP_401_UNAUTHORIZED ,
+    status_code=status.HTTP_401_UNAUTHORIZED
     detail = ErrorDetail(
         message="Please obtain a new token"
     )
@@ -175,7 +175,7 @@ def register_all_errors(app: FastAPI):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content=  ErrorDetail(
-            message="Opps!Try again or Contact Support"
+            message=f"Opps!Try again or Contact Support {str(exc)}"
             ).model_dump() 
       )
         
@@ -184,6 +184,6 @@ def register_all_errors(app: FastAPI):
            return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content=  ErrorDetail(
-            message="Opps!Try again or Contact Support"
+            message=f"Opps!Try again or Contact Support {(str(exc))}"
             ).model_dump() 
       )

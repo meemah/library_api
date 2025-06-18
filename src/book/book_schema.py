@@ -3,7 +3,7 @@ from pydantic import  BaseModel
 from typing import Optional, List
 import uuid
 from src.db.models import GenreModel, AuthorModel, ReviewModel
-
+import uuid
 class CreateBookSchema(BaseModel):
     name:str
     published_year: Optional[str]
@@ -28,6 +28,7 @@ class UpdateBookSchema(BaseModel):
 
 
 class GetBookSchema(BaseModel):
+    uid:uuid.UUID
     name:str
     published_year: Optional[str]
     description:str

@@ -62,16 +62,16 @@ class UserModel(SQLModel,table=True):
     )
     reviews: List["ReviewModel"]= Relationship(
         back_populates="user",
-        sa_relationship_kwargs={'lazy':"selectin"}
+  
     )
     loans: List["LoanBookModel"] = Relationship(
         back_populates="user",
-        sa_relationship_kwargs={'lazy':"selectin"}
+      
 
     )
     loan_queue: List["LoanQueueModel"] = Relationship(
     back_populates="user",
-    sa_relationship_kwargs={"lazy": "selectin"}
+  
 )
 
 class AuthorModel(SQLModel, table = True):
@@ -103,7 +103,7 @@ class AuthorModel(SQLModel, table = True):
     books: List["BookModel"] = Relationship(
         link_model=AuthorBookLink,
         back_populates="authors",
-         sa_relationship_kwargs={'lazy':"selectin"}
+     
     )
     
 
@@ -135,7 +135,6 @@ class GenreModel(SQLModel, table=True):
     description: Optional[str]
     books: List["BookModel"] = Relationship(
           link_model=GenreBookLink,
-          sa_relationship_kwargs={'lazy':"selectin"},
           back_populates="genres"
     )
 
@@ -174,24 +173,29 @@ class BookModel(SQLModel, table=True):
     authors: List["AuthorModel"] = Relationship(
         link_model=AuthorBookLink,
         back_populates="books",
-        sa_relationship_kwargs={'lazy':"selectin"}
+         sa_relationship_kwargs={"lazy": "noload"}
+     
     )
     genres: List["GenreModel"] = Relationship(
         link_model=GenreBookLink,
         back_populates="books",
-        sa_relationship_kwargs={'lazy':"selectin"}
+         sa_relationship_kwargs={"lazy": "noload"}
+     
     )
     reviews: List["ReviewModel"]= Relationship(
         back_populates="book",
-        sa_relationship_kwargs={'lazy':"selectin"}
+         sa_relationship_kwargs={"lazy": "noload"}
+  
     )
     loans: List["LoanBookModel"] = Relationship(
         back_populates="book",
-         sa_relationship_kwargs={'lazy':"selectin"}
+         sa_relationship_kwargs={"lazy": "noload"}
+       
     )
     loan_queue: List["LoanQueueModel"] = Relationship(
     back_populates="book",
-    sa_relationship_kwargs={"lazy": "selectin"}
+     sa_relationship_kwargs={"lazy": "noload"}
+
     )
     
     
@@ -224,7 +228,7 @@ class ReviewModel(SQLModel, table = True):
     )
     user: Optional["UserModel"] = Relationship(
         back_populates="reviews",
-        sa_relationship_kwargs={"lazy": "selectin"}
+   
     )
     book_uid: uuid.UUID = Field(
         default=None,
@@ -232,7 +236,7 @@ class ReviewModel(SQLModel, table = True):
     )
     book: Optional["BookModel"] = Relationship(
         back_populates="reviews",
-        sa_relationship_kwargs={"lazy": "selectin"}
+      
     )
     
 
@@ -267,7 +271,7 @@ class LoanBookModel(SQLModel, table = True):
     )
     book: Optional["BookModel"] = Relationship(
         back_populates="loans",
-         sa_relationship_kwargs={"lazy": "selectin"}
+     
     )
     user_uid:uuid.UUID = Field(
         pg.UUID,
@@ -276,7 +280,7 @@ class LoanBookModel(SQLModel, table = True):
     )
     user: Optional["UserModel"] = Relationship(
         back_populates="loans",
-        sa_relationship_kwargs={"lazy": "selectin"}
+      
     )
     loan_status: LoanStatus = Field(
         default= LoanStatus.active,
@@ -330,7 +334,7 @@ class LoanQueueModel(SQLModel, table=True):
     )
     user:Optional["UserModel"] = Relationship(
         back_populates="loan_queue",
-        sa_relationship_kwargs={"lazy": "selectin"}
+
     )
     book_uid: uuid.UUID = Field(
               foreign_key="book.uid",
@@ -339,7 +343,7 @@ class LoanQueueModel(SQLModel, table=True):
     )
     book : Optional["BookModel"]= Relationship(
         back_populates="loan_queue",
-        sa_relationship_kwargs={"lazy": "selectin"}
+      
     )
     joined_at: datetime = Field(
         sa_column=Column(

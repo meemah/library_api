@@ -5,5 +5,5 @@ class CreateGenreSchema(BaseModel):
     name:str
     
 class UpdateGenreSchema(BaseModel):
-    description:Optional[str]
-    name:Optional[str]
+    description:Optional[str] =None
+    name:Optional[str]=None

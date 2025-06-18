@@ -14,13 +14,13 @@ from .book_schema import CreateBookSchema, GetBookSchema, UpdateBookSchema
 book_router = APIRouter()
 
 
-@book_router.post("/create", response_model=SuccessResponse[BookModel])
+@book_router.post("/create", response_model=SuccessResponse[GetBookSchema])
 async def create_book(
     create_book:CreateBookSchema,
     session = Depends(get_session),
     _ = Depends(AccessToken())
 ):
-    book = await  BookService.create_book(session,create_book)
+    book = await BookService.create_book(session,create_book)
     return SuccessResponse(
         message = "Book created successfully",
         data = book
@@ -46,7 +46,7 @@ async def get_book(
     session = Depends(get_session),
         _ = Depends(AccessToken()) 
 ):
-    book = await BookService.get_book( session, book_uid )
+    book = await BookService.get_full_book( session, book_uid )
     if book is None:
         raise BookNotFound()
     else:
