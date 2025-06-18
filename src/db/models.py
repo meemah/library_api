@@ -115,15 +115,13 @@ class GenreModel(SQLModel, table=True):
             nullable=False,
             primary_key=True,
             default=uuid.uuid4
-        )
-    )
+        ))
     created_at: datetime = Field(
         sa_column=Column(
         pg.TIMESTAMP,
         nullable=False,
         default= datetime.now
-        )
-    )
+        ))
     updated_at: datetime =Field(
         sa_column=Column(
         pg.TIMESTAMP,
@@ -147,8 +145,7 @@ class BookModel(SQLModel, table=True):
             nullable=False,
             primary_key=True,
             default=uuid.uuid4
-        )
-    )
+        ))
     name:str
     published_year: Optional[str]
     description:str
@@ -157,46 +154,32 @@ class BookModel(SQLModel, table=True):
         pg.TIMESTAMP,
         nullable=False,
         default= datetime.now
-        )
-    )
+        ))
     updated_at: datetime =Field(
         sa_column=Column(
         pg.TIMESTAMP,
         nullable=False,
-        default= datetime.now
-        )
-    )
+        default= datetime.now))
     total_copies: int
     loaned_copies: int = Field(
-        default=0
-    )
+        default=0)
     authors: List["AuthorModel"] = Relationship(
         link_model=AuthorBookLink,
         back_populates="books",
-         sa_relationship_kwargs={"lazy": "noload"}
-     
-    )
+         sa_relationship_kwargs={"lazy": "noload"})
     genres: List["GenreModel"] = Relationship(
         link_model=GenreBookLink,
         back_populates="books",
-         sa_relationship_kwargs={"lazy": "noload"}
-     
-    )
+         sa_relationship_kwargs={"lazy": "noload"})
     reviews: List["ReviewModel"]= Relationship(
         back_populates="book",
-         sa_relationship_kwargs={"lazy": "noload"}
-  
-    )
+         sa_relationship_kwargs={"lazy": "noload"})
     loans: List["LoanBookModel"] = Relationship(
         back_populates="book",
-         sa_relationship_kwargs={"lazy": "noload"}
-       
-    )
+         sa_relationship_kwargs={"lazy": "noload"})
     loan_queue: List["LoanQueueModel"] = Relationship(
     back_populates="book",
-     sa_relationship_kwargs={"lazy": "noload"}
-
-    )
+     sa_relationship_kwargs={"lazy": "noload"})
     
     
     
